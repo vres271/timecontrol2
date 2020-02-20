@@ -127,36 +127,42 @@ RF24 radio(9, 10);   // "создать" модуль на пинах 9 и 10 д
 char divider = ' ';
 char ending = ';';
 const char *headers[]  = {
-	"getresults",   // 0
-	"getinputs",   // 1
-	"getconfig",    // 5
-	"race",   // 2
-	"save",   // 3
-	"mode",    // 4
-	"laps",    // 5
-	"level",    // 5
-	"cancel",    // 5
-	"scal",    // 5
-	"batr",    // 5
-	"mute",    // 5
-	"stimeout",    // 5
-	"help",    // 5
+	"getresults",
+	"getinputs",
+	"getconfig",
+	"race",
+	"save",
+	"mode",
+	"laps",
+	"level",
+	"cancel",
+	"scal",
+	"batr",
+	"mute",
+	"stimeout",
+	"<", 
+	"^", 
+	">", 
+	"help",
 };
 enum names {
-	GET_RESULTS,   // 0
-	GET_INPUTS,   // 1
-	GET_CONFIG,   // 1
-	RACE,   // 2
-	SAVE,   // 3
-	_MODE,    // 4
-	LAPS,    // 5
-	LEVEL,    // 5
-	CANCEL,    // 5
-	SCAL,    // 5
-	BATR,    // 5
-	_MUTE,    // 5
-	_STIMEOUT,    // 5
-	HELP,    // 5
+	GET_RESULTS, 
+	GET_INPUTS, 
+	GET_CONFIG, 
+	RACE, 
+	SAVE, 
+	_MODE, 
+	LAPS, 
+	LEVEL, 
+	CANCEL, 
+	SCAL, 
+	BATR, 
+	_MUTE, 
+	_STIMEOUT, 
+	BUTTON1, 
+	BUTTON2, 
+	BUTTON3, 
+	HELP, 
 };
 names thisName;
 byte headers_am = sizeof(headers) / 2;
@@ -303,6 +309,9 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 
 	if(event_code==0) event_code = checkForEvents();
 	//if(event_code) {log("\n"); log(event_code);}
+
+	if(event_code == 1  || event_code == 3) beep(140,10);
+	if( event_code == 2 ) beep(400,20);
 
 	if(state == 0) { // Состояние - меню
 		if(event_code == 1) { // Нажата  кнопка 1
@@ -1057,7 +1066,7 @@ int unsigned writeResult(int unsigned racer, long unsigned time) {
 	EEPROM.put(EEPROM_OFFSET + write_to_addr, row);
 	write_to_addr += sizeof(Row);
 	EEPROM.put(0, write_to_addr);
-	log("Saved\n");
+	//log("Saved\n");
 	return write_to_addr;
 }
 
@@ -1299,6 +1308,12 @@ void SerialRouter() {
 			menu=8;
 			menu_entered=true;
 			handler(20);
+		} else if (thisName == BUTTON1) {
+			handler(1);
+		} else if (thisName == BUTTON2) {
+			handler(2);
+		} else if (thisName == BUTTON3) {
+			handler(3);
 		} else if (thisName == HELP && state !=1) {
 			printHelp();
 		}
@@ -1312,22 +1327,22 @@ void beep(unsigned int freq, unsigned int duration) {
 }
 
 void printHelp() {
-	log("\nText Commands:");
-	log("\ngetresults <int>: returns result for racer/all");
+	log("\n<,^,> : release 1,2,3 Buttons");
+	log("\ngetresults <1-255>: returns result for racer/all");
 	log("\ngetinputs : returns all inputs values");
 	log("\ngetconfig : returns config");
-	log("\nrace : go to race mode");
-	log("\nsave <int 1/0>: get/set saving results to memory option");
-	log("\nmode <int 1/0>: get/set Line or Laps mode");
-	log("\nlaps <int>: get/set laps number (for Laps mode) ");
-	log("\nlevel <int>: get/set sensor TRUE level ");
-	log("\nstimeout <int>: get/set sensor timeout in milliseconds");
+	log("\nrace <1-255>: go to race mode and set racer");
+	log("\nsave <1-0>: get/set saving results to memory option");
+	//log("\nmode <1/0>: get/set Line or Laps mode");
+	log("\nlaps <1-255>: get/set laps number (for Laps mode) ");
+	log("\nlevel <1-1024>: get/set sensor TRUE level ");
+	log("\nstimeout <0-10000>: get/set sensor timeout in milliseconds");
 	log("\ncancel : cancel race for curet racer (if it started)");
 	log("\nscal : go to sensor calibration mode");
 	log("\nbatr : returns batery voltage");
-	log("\nmute <int>: get/set muting sounds");
-	log("\nhelp : print this^");
-	log("\n");
+	log("\nmute <1-0>: get/set muting sounds");
+	//log("\nhelp : print this^");
+	//log("\n");
 
 
 }
