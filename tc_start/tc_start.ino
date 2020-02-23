@@ -114,11 +114,11 @@ byte SENSOR_MODE = 0;   // режим датчика (FALLING/RISING/CHANGE)
 //--------------------- НАСТРОЙКИ ----------------------
 
 //--------------------- БИБЛИОТЕКИ ----------------------
-#include <SPI.h>
-#include "nRF24L01.h"
-#include "RF24.h"
-#include "printf.h"
-RF24 radio(9, 10);   // "создать" модуль на пинах 9 и 10 для НАНО/УНО
+// #include <SPI.h>
+// #include "nRF24L01.h"
+// #include "RF24.h"
+// #include "printf.h"
+// RF24 radio(9, 10);   // "создать" модуль на пинах 9 и 10 для НАНО/УНО
 //RF24 radio(9, 53); // для МЕГИ
 #include <EEPROM.h>
 
@@ -192,9 +192,10 @@ byte address[][6] = {"1Node", "2Node", "3Node", "4Node", "5Node", "6Node"}; // �
 volatile unsigned int cur_racer = 1;
 volatile unsigned int sensor_value = 0;
 unsigned int laps_counter = 0;
+unsigned int best_lap_racer = 0, best_racer = 0;
 
 volatile unsigned long sens_last_released, btn_last_released, bat_v_last_msrd, dbl_btn_released;
-unsigned long last_ping, timer_started, result_time, cur_lap_time, cur_time, ping_time, last_test_time = 0, inputvals_last_showed = 0, serial_last_read = 0;
+unsigned long last_ping, timer_started, result_time, cur_lap_time, cur_time, best_lap_time = 0, best_time = 0, ping_time, last_test_time = 0, inputvals_last_showed = 0, serial_last_read = 0;
 unsigned int test_send_counter = 0;
 unsigned long display_blocked = 0;
 
@@ -268,8 +269,8 @@ void setup() {
 	}
 
 
-	radioSetup();
-	if(MODE==0) radioOff(); // Если включен круговой режим, гасим радио
+	// radioSetup();
+	// if(MODE==0) radioOff(); // Если включен круговой режим, гасим радио
 
 	display.setBrightness(7);
 	displayWord(_r,_A,_C,_E);
@@ -287,7 +288,7 @@ void loop() {
 	checkForSensor();
 	handler();
 	getBatV();
-	ping();
+	//ping();
 
 	parsingSeparate();
 	SerialRouter();
@@ -352,7 +353,7 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 						setCurRacer(cur_racer);
 					}
 				} else if(event_code == 4) {
-					send(1,1,cur_racer);
+					//send(1,1,cur_racer);
 					state = 1; // go to state 1
 					timer_started = millis();
 					result_time = 0;
@@ -485,7 +486,7 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 				displayWord(_t,_E,_S,_t); // tESt
 			} else {
 				if(millis()-last_test_time > 300) {
-					send(6,1,10+test_send_counter);
+					//send(6,1,10+test_send_counter);
 					test_send_counter++;
 					last_test_time = millis();
 				}
@@ -549,10 +550,10 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 				}
 				if(MODE==0) {
 					displayWord(_L,_A,_P,_S); // LAPS
-					radioOff();
+					//radioOff();
 				} else if (MODE==1) {
 					displayWord(_L,_i,_N,_E); // LINE
-					radioOn();
+					//radioOn();
 				}
 			}
 		} else if (menu == 11) { // Количество кругов
@@ -699,7 +700,7 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 	} else if(state == 1) { // Состояние - заезд
 		if(event_code == 2 || event_code == 40) { // Нажата средняя кнопка
 			log("Cancel race: ");log(cur_racer);log("\n");
-			send(1,2,0);
+			//send(1,2,0);
 			displayWord(_C,_N,_C,_L); // Cancel
 			result_time = 0;
 			laps_counter = 0;
@@ -707,21 +708,26 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 			beep( 3000,200); delay(250);
 			beep( 3000,200); delay(250);
 			state = 0;
-		} else if(event_code == 5) { // Принято сообщение
-			if(data>128) { // Пришел результат заезда
-			    log("\nResult: ");log(cur_racer);log(": ");Serial.print(0.001*data,3);BTSerial.print(0.001*data,3);log("\n\n");
-				result_time = data;
-				displayTime(result_time);
-				beep( 3000,100); delay(150);
-				beep( 3000,100); delay(150);
-				beep( 3000,100); delay(150);
-				if(SAVE_RESULTS) writeResult(cur_racer,result_time);
-				unsigned int write_to_addr = EEPROM.get(0, write_to_addr);
-				last_result_num = write_to_addr/sizeof(Row)-1;
-				cur_result_to_read = last_result_num;
-			    state = 2;
-			} else { // Пришла команда
-			}
+		// } else if(event_code == 5) { // Принято сообщение
+		// 	if(data>128) { // Пришел результат заезда
+		// 	    log("\nResult: ");log(cur_racer);log(": ");Serial.print(0.001*data,3);BTSerial.print(0.001*data,3);log("\n\n");
+		// 		result_time = data;
+		// 		displayTime(result_time);
+		// 		beep( 3000,100); delay(150);
+		// 		beep( 3000,100); delay(150);
+		// 		beep( 3000,100); delay(150);
+		// 		if(SAVE_RESULTS) writeResult(cur_racer,result_time);
+		// 		unsigned int write_to_addr = EEPROM.get(0, write_to_addr);
+		// 		last_result_num = write_to_addr/sizeof(Row)-1;
+		// 		cur_result_to_read = last_result_num;
+		// 	    state = 2;
+		// 	} else { // Пришла команда
+		// 	}
+
+			// best_lap_racer
+			// best_racer
+			// best_lap_time
+			// best_time
 		} else if (event_code == 4) { // Сработал датчик
 			if(MODE==0) { // В круговом режиме -  проехан круг
 				//displayWord(__,__,__,__);
@@ -732,18 +738,43 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 				cur_lap_time = millis() - timer_started - cur_time;
 				cur_time = millis() - timer_started;
 				displayInt(laps_counter);
-			    //log("\nLap ");log(laps_counter);log(": ");Serial.print(0.001*cur_time,3);BTSerial.print(0.001*cur_time,3);log(" ");Serial.print(0.001*cur_lap_time,3);BTSerial.print(0.001*cur_lap_time,3);
+
 			    log("\nLap ");log(laps_counter);log(": ");millisToTime(cur_time);log(" ");millisToTime(cur_lap_time);
+				if(best_lap_time==0) {
+					best_lap_racer = cur_racer;
+					best_lap_time = cur_lap_time;
+				} else if (cur_lap_time<best_lap_time) {
+					best_lap_racer = cur_racer;
+					best_lap_time = cur_lap_time;
+				    log(" Best lap result!");
+					beep( 2000,100); delay(250);
+					beep( 1000,100); delay(350);
+				}
+
 				if(laps_counter>=LAPS_NUMBER) { // проехан последний круг
 					//result_time = millis() - timer_started;
 					result_time = cur_time;
-				    //log("\nResult:");log(" ");log(cur_racer);log(": ");Serial.print(0.001*result_time,3);BTSerial.print(0.001*result_time,3);log("\n\n");
-				    log("\nResult:");log(" ");log(cur_racer);log(": ");millisToTime(result_time);log("\n\n");
+				    log("\nResult:");log(" ");log(cur_racer);log(": ");millisToTime(result_time);
 					laps_counter = 0;
 					displayTime(result_time);
 					beep( 3000,100); delay(150);
 					beep( 3000,100); delay(150);
 					beep( 3000,100); delay(150);
+
+					if(best_time==0) {
+						best_racer = cur_racer;
+						best_time = result_time;
+					} else if (result_time<best_time) {
+						best_racer = cur_racer;
+						best_time = result_time;
+					    log(" Best result!");
+						beep( 2000,100); delay(250);
+						beep( 2000,100); delay(150);
+						beep( 1500,100); delay(350);
+						beep( 1000,100); delay(450);
+					}
+					log("\n\n");
+
 					if(SAVE_RESULTS) writeResult(cur_racer,result_time);
 					unsigned int write_to_addr = EEPROM.get(0, write_to_addr);
 					last_result_num = write_to_addr/sizeof(Row)-1;
@@ -763,7 +794,7 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 		if(event_code == 1 || event_code == 2 || event_code == 3) {
 			state = 0;
 		} else if(event_code == 4) {
-			send(1,1,cur_racer);
+			//send(1,1,cur_racer);
 			state = 1;
 			timer_started = millis();
 			beep( 9050,300);
@@ -907,7 +938,7 @@ void setCurRacer(unsigned int n) {
 	cur_racer = n;
 	displayCurRacer(cur_racer);
 	log("Set racer: ");log(cur_racer);log("\n");
-	send(2,1,cur_racer);
+	//send(2,1,cur_racer);
 }
 
 void getBatV() {
@@ -950,79 +981,79 @@ void getInputValues() {
 	inputvals_last_showed = millis();
 }
 
-void ping() {
-	if(millis() - last_ping < PING_TMT) return;
-	if(state==1) {
-		send(3,1,cur_racer);
-	} else {
-		send(4,1,cur_racer);
-	}
-	last_ping = millis();
-}
+// void ping() {
+// 	if(millis() - last_ping < PING_TMT) return;
+// 	if(state==1) {
+// 		send(3,1,cur_racer);
+// 	} else {
+// 		send(4,1,cur_racer);
+// 	}
+// 	last_ping = millis();
+// }
 
 
-void send(long unsigned object, long unsigned method, long unsigned data) {
-	if(MODE == 0) return;
-	transmit_data[0] = object;
-	transmit_data[1] = method;
-	transmit_data[2] = data;
-	long unsigned last_tx_time = micros();
-	if(radio.write(&transmit_data, sizeof(transmit_data))) {
-		if(object != 3 && SEND_DEBUG_MODE) {log("> Sended: ");log(object);log(" ");log(method);log(" ");log(data);log("\n");}
-	    trnsmtd_pack++;
-		if(ping_time == 0) {
-			ping_time = micros() - last_tx_time;
-		} else {
-			ping_time = (micros() - last_tx_time + 4*ping_time)/5;
-		}
-	    if (!radio.available()) {                                  // если получаем пустой ответ
-	    } else {
-	      while (radio.available() ) {                    // если в ответе что-то есть
-        	radio.read(&recieved_data, sizeof(recieved_data));    // читаем
-	        onRecieved(recieved_data);
-	      }
-    	}
-	} else {
-    	failed_pack++;
-	}
+// void send(long unsigned object, long unsigned method, long unsigned data) {
+// 	if(MODE == 0) return;
+// 	transmit_data[0] = object;
+// 	transmit_data[1] = method;
+// 	transmit_data[2] = data;
+// 	long unsigned last_tx_time = micros();
+// 	if(radio.write(&transmit_data, sizeof(transmit_data))) {
+// 		if(object != 3 && SEND_DEBUG_MODE) {log("> Sended: ");log(object);log(" ");log(method);log(" ");log(data);log("\n");}
+// 	    trnsmtd_pack++;
+// 		if(ping_time == 0) {
+// 			ping_time = micros() - last_tx_time;
+// 		} else {
+// 			ping_time = (micros() - last_tx_time + 4*ping_time)/5;
+// 		}
+// 	    if (!radio.available()) {                                  // если получаем пустой ответ
+// 	    } else {
+// 	      while (radio.available() ) {                    // если в ответе что-то есть
+//         	radio.read(&recieved_data, sizeof(recieved_data));    // читаем
+// 	        onRecieved(recieved_data);
+// 	      }
+//     	}
+// 	} else {
+//     	failed_pack++;
+// 	}
 
-	if (millis() - RSSI_timer > 5000) {                        // таймер RSSI
-	    // рассчёт качества связи (0 - 100%) на основе числа ошибок и числа успешных передач
-	    rssi = (1 - ((float)failed_pack / trnsmtd_pack)) * 100;  
+// 	if (millis() - RSSI_timer > 5000) {                        // таймер RSSI
+// 	    // рассчёт качества связи (0 - 100%) на основе числа ошибок и числа успешных передач
+// 	    rssi = (1 - ((float)failed_pack / trnsmtd_pack)) * 100;  
 
-	    // сбросить значения
-	    failed_pack = 0;
-	    trnsmtd_pack = 0;
-	    RSSI_timer = millis();
-	}
+// 	    // сбросить значения
+// 	    failed_pack = 0;
+// 	    trnsmtd_pack = 0;
+// 	    RSSI_timer = millis();
+// 	}
 
-}
+// }
 
 
-void radioSetup() {
-  radio.begin();              // активировать модуль
-  radio.setAutoAck(1);        // режим подтверждения приёма, 1 вкл 0 выкл
-  radio.setRetries(0, 15);    // (время между попыткой достучаться, число попыток)
-  radio.enableAckPayload();   // разрешить отсылку данных в ответ на входящий сигнал
-  radio.setPayloadSize(32);   // размер пакета, в байтах
-  radio.openWritingPipe(address[0]);   // мы - труба 0, открываем канал для передачи данных
-  radio.setChannel(CH_NUM);            // выбираем канал (в котором нет шумов!)
-  radio.setPALevel(SIG_POWER);         // уровень мощности передатчика
-  radio.setDataRate(SIG_SPEED);        // скорость обмена
-  // должна быть одинакова на приёмнике и передатчике!
-  // при самой низкой скорости имеем самую высокую чувствительность и дальность!!
+// void radioSetup() {
+//   radio.begin();              // активировать модуль
+//   radio.setAutoAck(1);        // режим подтверждения приёма, 1 вкл 0 выкл
+//   radio.setRetries(0, 15);    // (время между попыткой достучаться, число попыток)
+//   radio.enableAckPayload();   // разрешить отсылку данных в ответ на входящий сигнал
+//   radio.setPayloadSize(32);   // размер пакета, в байтах
+//   radio.openWritingPipe(address[0]);   // мы - труба 0, открываем канал для передачи данных
+//   radio.setChannel(CH_NUM);            // выбираем канал (в котором нет шумов!)
+//   radio.setPALevel(SIG_POWER);         // уровень мощности передатчика
+//   radio.setDataRate(SIG_SPEED);        // скорость обмена
+//   // должна быть одинакова на приёмнике и передатчике!
+//   // при самой низкой скорости имеем самую высокую чувствительность и дальность!!
 
-  radio.powerUp();         // начать работу
-  radio.stopListening();   // не слушаем радиоэфир, мы передатчик
-}
+//   radio.powerUp();         // начать работу
+//   radio.stopListening();   // не слушаем радиоэфир, мы передатчик
+// }
 
-void radioOn() {
-	radio.powerUp();
-}
+// void radioOn() {
+// 	radio.powerUp();
+// }
 
-void radioOff() {
-	radio.powerDown();
-}
+// void radioOff() {
+// 	radio.powerDown();
+// }
 
 
 
@@ -1066,7 +1097,7 @@ int unsigned writeResult(int unsigned racer, long unsigned time) {
 	EEPROM.put(EEPROM_OFFSET + write_to_addr, row);
 	write_to_addr += sizeof(Row);
 	EEPROM.put(0, write_to_addr);
-	//log("Saved\n");
+	log("[Saved]\n");
 	return write_to_addr;
 }
 
@@ -1341,8 +1372,8 @@ void printHelp() {
 	log("\nscal : go to sensor calibration mode");
 	log("\nbatr : returns batery voltage");
 	log("\nmute <1-0>: get/set muting sounds");
-	//log("\nhelp : print this^");
-	//log("\n");
+	log("\nhelp : print this^");
+	log("\n");
 
 
 }
