@@ -747,8 +747,12 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 					best_lap_racer = cur_racer;
 					best_lap_time = cur_lap_time;
 				    log(" Best lap result!");
-					beep( 2000,100); delay(250);
-					beep( 1000,100); delay(350);
+					delay(100);
+					beep( 523,130); delay(140); // До
+					beep( 587,130); delay(140); // Ре
+					beep( 659,130); delay(140); // Ми
+					beep( 880,300); delay(300);
+					beep( 987,400); 
 				}
 
 				if(laps_counter>=LAPS_NUMBER) { // проехан последний круг
@@ -768,10 +772,11 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 						best_racer = cur_racer;
 						best_time = result_time;
 					    log(" Best result!");
-						beep( 2000,100); delay(250);
-						beep( 2000,100); delay(150);
-						beep( 1500,100); delay(350);
-						beep( 1000,100); delay(450);
+						delay(100);
+						beep( 659,130); delay(140);
+						beep( 659,130); delay(140);
+						beep( 659,130); delay(140);
+						beep( 523,600); 
 					}
 					log("\n\n");
 
