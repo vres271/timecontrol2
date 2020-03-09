@@ -708,6 +708,7 @@ void handler(byte event_code = 0, long unsigned data = 0) {
 			beep( 3000,200); delay(250);
 			beep( 3000,200); delay(250);
 			state = 0;
+			menu_entered = 0;
 		// } else if(event_code == 5) { // Принято сообщение
 		// 	if(data>128) { // Пришел результат заезда
 		// 	    log("\nResult: ");log(cur_racer);log(": ");Serial.print(0.001*data,3);BTSerial.print(0.001*data,3);log("\n\n");
